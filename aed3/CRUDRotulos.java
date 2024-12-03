@@ -11,8 +11,17 @@ public class CRUDRotulos {
         this.indiceInvertido = indiceInvertido;
     }
 
-    public void adicionarRotulo(String rotulo, int idTarefa, int frequencia) throws Exception {
+    public ArrayList<Integer> buscarRotulo(String rotulo) throws Exception {
 
+        if (arvoreRotulos.existe(rotulo)) {
+
+            return arvoreRotulos.ler(rotulo);
+        }
+
+        return new ArrayList<>();
+    }
+
+    public void adicionarRotulo(String rotulo, int idTarefa, int frequencia) throws Exception {
         if (!arvoreRotulos.existe(rotulo)) {
             arvoreRotulos.inserir(rotulo, arvoreRotulos.gerarProximoID());
         }
@@ -20,25 +29,34 @@ public class CRUDRotulos {
         indiceInvertido.addTerm(rotulo, idTarefa, frequencia);
     }
 
-    public ArrayList<Integer> buscarRotulo(String rotulo) throws Exception {
-        if (arvoreRotulos.existe(rotulo)) {
-            return arvoreRotulos.ler(rotulo);
-        }
-        return new ArrayList<>();
-    }
-
     public void removerRotulo(String rotulo) throws Exception {
         if (arvoreRotulos.existe(rotulo)) {
-            arvoreRotulos.excluir(rotulo);
 
+            ArrayList<Integer> idsTarefas = arvoreRotulos.ler(rotulo);
+            for (int idTarefa : idsTarefas) {
+
+                indiceInvertido.removerTermo(rotulo, idTarefa);
+            }
+
+            arvoreRotulos.excluir(rotulo);
         }
     }
 
     public void editarRotulo(String rotuloAntigo, String rotuloNovo) throws Exception {
         if (arvoreRotulos.existe(rotuloAntigo)) {
-            int id = arvoreRotulos.ler(rotuloAntigo).get(0);
+
+            ArrayList<Integer> idsTarefas = arvoreRotulos.ler(rotuloAntigo);
+
+            for (int idTarefa : idsTarefas) {
+                indiceInvertido.removerTermo(rotuloAntigo, idTarefa);
+            }
+
             arvoreRotulos.excluir(rotuloAntigo);
-            arvoreRotulos.inserir(rotuloNovo, id);
+            arvoreRotulos.inserir(rotuloNovo, arvoreRotulos.gerarProximoID());
+
+            for (int idTarefa : idsTarefas) {
+                indiceInvertido.addTerm(rotuloNovo, idTarefa, 1);
+            }
         }
     }
 }
